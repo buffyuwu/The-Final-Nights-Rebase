@@ -25,7 +25,6 @@
 	jobtype = /datum/job/vampire/baron
 
 	id = /obj/item/card/baron
-	ears = /obj/item/radio/headset/darkpack
 	glasses = /obj/item/clothing/glasses/vampire/sun
 	uniform = /obj/item/clothing/under/vampire/bar
 	suit = /obj/item/clothing/suit/vampire/jacket/better
@@ -33,4 +32,4 @@
 	gloves = /obj/item/clothing/gloves/vampire/work
 	l_pocket = /obj/item/smartphone/baron
 	r_pocket = /obj/item/vamp/keys/baron
-	backpack_contents = list(/obj/item/phone_book=1, /obj/item/card/credit=1)
+	backpack_contents = list(/obj/item/phone_book=1, /obj/item/card/credit=1, /obj/item/clothing/gloves/vampire/tfn/brassknuckles/spiked=1) // TFN EDIT

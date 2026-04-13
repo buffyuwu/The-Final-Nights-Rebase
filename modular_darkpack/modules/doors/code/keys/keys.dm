@@ -61,6 +61,7 @@
 		LOCKACCESS_JAZZ_CLUB,
 		LOCKACCESS_PRIMOGEN,
 		LOCKACCESS_JAZZ_CLUB_DELIVERY,
+		LOCKACCESS_PRINCE, // TFN ADIT ADD
 	)
 	color = "#bd3327"
 
@@ -212,10 +213,7 @@
 	name = "sexy keys"
 	accesslocks = list(
 		LOCKACCESS_TOREADOR,
-		"toreador1",
-		"toreador2",
-		"toreador3",
-		"toreador4"
+		LOCKACCESS_STRIP
 	)
 	color = "#ffa7e6"
 
@@ -239,6 +237,7 @@
 	name = "really sexy keys"
 	accesslocks = list(
 		LOCKACCESS_PRIMOGEN_TOREADOR,
+		LOCKACCESS_STRIP,
 		LOCKACCESS_TOREADOR,
 		LOCKACCESS_PRIMOGEN,
 		LOCKACCESS_JAZZ_CLUB,
@@ -318,6 +317,13 @@
 	)
 	color = "#6a2e1d"
 
+// TFN EDIT START
+/obj/item/vamp/keys/setite
+	name = "setite keys"
+	accesslocks = list(
+		LOCKACCESS_SETITE
+	)
+// TFN EDIT END
 //===========================CLINIC KEYS===========================
 /obj/item/vamp/keys/clinic
 	name = "clinic keys"
