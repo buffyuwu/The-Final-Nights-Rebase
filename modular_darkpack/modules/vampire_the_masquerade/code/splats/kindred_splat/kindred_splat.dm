@@ -100,6 +100,7 @@
 	SEND_SIGNAL(owner, COMSIG_MOB_UPDATE_AURA) // TFN EDIT ADD
 
 /datum/splat/vampire/kindred/on_lose()
+	owner.remove_st_power(/datum/discipline/bloodheal)
 	owner.set_clan(null)
 
 	UnregisterSignal(owner, list(

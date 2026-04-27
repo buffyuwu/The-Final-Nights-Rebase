@@ -69,6 +69,17 @@
 	src.discipline = discipline
 	src.owner = discipline.owner
 
+/datum/discipline_power/Destroy(force)
+	for(var/i in length(duration_timers))
+		deltimer(duration_timers[i])
+	if(cooldown_timer)
+		deltimer(cooldown_timer)
+		cooldown_timer = null
+	QDEL_LIST(duration_timers)
+	grouped_powers = null
+	owner = null
+	return ..()
+
 /**
  * Returns the time left the cooldown timer, or
  * 0 if there is none. Returning 0 means not on
@@ -249,6 +260,9 @@
  */
 /datum/discipline_power/proc/can_activate(atom/target, alert = FALSE)
 	SHOULD_CALL_PARENT(TRUE)
+
+	if (!owner)
+		return FALSE
 
 	var/signal_return = SEND_SIGNAL(src, COMSIG_POWER_TRY_ACTIVATE, src, target) | SEND_SIGNAL(owner, COMSIG_POWER_TRY_ACTIVATE, src, target)
 	if (target)

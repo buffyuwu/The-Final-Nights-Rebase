@@ -13,7 +13,7 @@
 	male_clothes = /obj/item/clothing/under/vampire/malkavian
 	female_clothes = /obj/item/clothing/under/vampire/malkavian/female
 	subsplat_keys = /obj/item/vamp/keys/malkav
-	var/list/mob/living/madness_network
+	var/list/madness_network
 
 /datum/subsplat/vampire_clan/malkavian/on_gain(mob/living/carbon/human/gaining_mob, datum/splat/gaining_splat, joining_round)
 	. = ..()
@@ -25,7 +25,7 @@
 	gaining_mob.add_quirk(/datum/quirk/derangement)
 
 	// Madness Network handling
-	LAZYADD(madness_network, gaining_mob)
+	LAZYADD(madness_network, WEAKREF(gaining_mob))
 	RegisterSignal(gaining_mob, COMSIG_MOB_SAY, PROC_REF(handle_say), override = TRUE)
 	RegisterSignal(gaining_mob, COMSIG_MOVABLE_HEAR, PROC_REF(handle_hear), override = TRUE)
 
@@ -38,7 +38,9 @@
 		malkavian_action.Remove(losing_mob)
 
 	// Remove Madness Network
-	LAZYREMOVE(madness_network, losing_mob)
+	for(var/datum/weakref/weakref_datum as anything in madness_network)
+		if(weakref_datum.resolve() == losing_mob)
+			LAZYREMOVE(madness_network, weakref_datum)
 	UnregisterSignal(losing_mob, COMSIG_MOB_SAY)
 	UnregisterSignal(losing_mob, COMSIG_MOVABLE_HEAR)
 
@@ -59,7 +61,8 @@
 	say_in_madness_network(hearing_args[HEARING_RAW_MESSAGE])
 
 /datum/subsplat/vampire_clan/malkavian/proc/say_in_madness_network(message)
-	for (var/mob/living/malkavian in madness_network)
+	for(var/datum/weakref/weakref_datum as anything in madness_network)
+		var/mob/living/malkavian = weakref_datum.resolve()
 		to_chat(malkavian, span_ghostalert(message))
 
 /datum/action/cooldown/malk_hivemind
