@@ -236,6 +236,7 @@ export const ScreenGhoulManager = (props: {
           <Button
             style={BUTTON_RED}
             onClick={() => setRecruiting(true)}
+            disabled={recruitsLeft === 0}
           >
             + Recruit ({recruitsLeft})
           </Button>
