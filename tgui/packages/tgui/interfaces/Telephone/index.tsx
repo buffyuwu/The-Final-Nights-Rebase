@@ -17,6 +17,26 @@ import { ScreenEndpost } from './ScreenEndpost';
 import { ScreenRecents } from './ScreenRecents';
 import { ScreenSettings } from './ScreenSettings';
 import { ScreenSoundSettings } from './ScreenSoundSettings';
+// TFN EDIT START
+import { ScreenGhoulManager } from './ScreenGhoulManager';
+
+export type GhoulManagerGhoul = {
+  name: string;
+  health_status: string;
+  current_task: string;
+  talk_text: string;
+  hair_style: string;
+  outfit: string;
+  shoes: string;
+};
+
+export type GhoulManagerRecruit = {
+  name: string;
+  hair_style: string;
+  outfit: string;
+  shoes: string;
+};
+// TFN EDIT END
 
 export type Contact = {
   name: string;
@@ -97,6 +117,12 @@ export type Data = {
 
   conversations: Conversation[];
   current_conversation_messages: ConversationMessage[];
+  // TFN EDIT START
+  is_kindred?: BooleanLike;
+  ghoul_manager_balance?: number;
+  ghoul_manager_ghouls?: GhoulManagerGhoul[];
+  ghoul_manager_recruits?: GhoulManagerRecruit[];
+  // TFN EDIT END
 };
 
 export enum NavigableApps {
@@ -110,6 +136,7 @@ export enum NavigableApps {
   Settings,
   SoundSettings,
   Endpost,
+  GhoulManager, // TFN EDIT ADD
 }
 
 const PhysicalScreen = memo((props: {
@@ -182,6 +209,10 @@ const PhysicalScreen = memo((props: {
         return <ScreenSoundSettings setApp={setApp} />;
       case NavigableApps.Endpost:
         return <ScreenEndpost setApp={setApp} />;
+      // TFN EDIT START
+      case NavigableApps.GhoulManager:
+        return <ScreenGhoulManager setApp={setApp} />;
+      // TFN EDIT END
       default:
         return <ScreenHome setApp={setApp} />;
     }

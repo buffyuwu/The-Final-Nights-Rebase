@@ -257,6 +257,23 @@ export const ScreenHome = (props: {
             </Stack.Item>
           </Stack>
         </Stack.Item>
+        {/* TFN EDIT START */}
+        {!!data.is_kindred && (
+          <Stack.Item>
+            <Stack fill align="center" justify="flex-start" wrap="wrap" ml={1}>
+              <Stack.Item>
+                <AppIcon
+                  backgroundColor="#3d0000"
+                  text="Shr3kN3t"
+                  iconName="users"
+                  iconColor="#8b0000"
+                  onClick={() => navigateTo(NavigableApps.GhoulManager)}
+                />
+              </Stack.Item>
+            </Stack>
+          </Stack.Item>
+        )}
+        {/* TFN EDIT END */}
         <Stack.Item>
           <Stack fill align="center" justify="space-around" wrap="wrap">
             <Stack.Item>
