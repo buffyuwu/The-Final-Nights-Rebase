@@ -213,7 +213,7 @@ export const ScreenGhoulManager = (props: {
         <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <Box>
             <Box style={{ color: '#555', fontSize: '0.75em' }}>account balance</Box>
-            <Box bold style={{ color: '#c0c0c0', fontSize: '1.4em' }}>{data.ghoul_manager_balance ?? 0} cr</Box>
+            <Box bold style={{ color: '#c0c0c0', fontSize: '1.4em' }}>${data.ghoul_manager_balance ?? 0}</Box>
           </Box>
           <Box style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Input
