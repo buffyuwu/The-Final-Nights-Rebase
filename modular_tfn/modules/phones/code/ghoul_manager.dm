@@ -126,7 +126,7 @@
 				"outfit" = chosen["outfit"],
 				"shoes" = chosen["shoes"],
 			))
-			ghoul_manager.pending_recruits -= chosen
+			ghoul_manager.pending_recruits.Remove(chosen)
 			prefs.save_character()
 			return TRUE
 
