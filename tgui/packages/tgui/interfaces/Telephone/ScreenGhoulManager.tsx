@@ -66,8 +66,8 @@ const HAIR_FILTERS: Record<string, string> = {
   '#8b1a1a': 'sepia(1) saturate(8) hue-rotate(330deg) brightness(0.65)',
   '#c8a96e': 'sepia(0.5) brightness(0.82) saturate(1.2)',
   '#d4a855': 'sepia(0.8) brightness(0.88)',
-  '#aaaaaa': 'grayscale(1) brightness(0.67)',
   '#4a3728': 'sepia(1) brightness(0.3) saturate(1.3)',
+  '#002262': 'sepia(1) saturate(8) hue-rotate(200deg) brightness(0.3)',
 };
 
 const GhoulSprite = ({
