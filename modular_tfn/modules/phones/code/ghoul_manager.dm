@@ -28,6 +28,60 @@
 		if(ghoul["name"] == name)
 			return ghoul
 
+/datum/ghoul_manager/proc/process_completed_tasks(datum/preferences/prefs)
+	var/changed = FALSE
+	for(var/list/ghoul in ghouls)
+		if(!ghoul["current_task"] || !ghoul["task_started"] || !ghoul["task_duration"])
+			continue
+		var/completion_time = ghoul["task_started"] + ghoul["task_duration"]
+		if(world.realtime <= completion_time)
+			continue
+		var/list/task_def = null
+		for(var/list/task in task_list())
+			if(task["id"] == ghoul["current_task"])
+				task_def = task
+				break
+		var/completion_stamp = time2text(completion_time, "Month DD, hh:mm")
+		var/list/activity_log = ghoul["activity"]
+		if(task_def)
+			var/mood_change = task_def["mood_change"] || 0
+			if(mood_change)
+				ghoul["mood"] = clamp((ghoul["mood"] || 0) + mood_change, 0, 10)
+			if(task_def["job_wage"])
+				ghoul["job_wage_amount"] = task_def["job_wage"]
+				ghoul["started_working_job"] = completion_time
+				ghoul["job_last_paid"] = completion_time
+			UNTYPED_LIST_ADD(activity_log, list("text" = task_def["completion_text"] || "Completed task", "time" = completion_stamp))
+		var/list/completed = ghoul["completed_tasks"]
+		if(!islist(completed))
+			completed = list()
+			ghoul["completed_tasks"] = completed
+		completed.Add(ghoul["current_task"])
+		ghoul["current_task"] = ""
+		ghoul["task_started"] = 0
+		ghoul["task_duration"] = 0
+		changed = TRUE
+	if(changed)
+		prefs.save_character()
+
+/datum/ghoul_manager/proc/process_job_income(datum/preferences/prefs)
+	var/changed = FALSE
+	for(var/list/ghoul in ghouls)
+		if(!ghoul["job_wage_amount"] || !ghoul["job_last_paid"])
+			continue
+		var/days_elapsed = floor((world.realtime - ghoul["job_last_paid"]) / 864000)
+		if(days_elapsed < 1)
+			continue
+		var/income = days_elapsed * ghoul["job_wage_amount"]
+		balance += income
+		var/paid_through = ghoul["job_last_paid"] + (days_elapsed * 864000)
+		ghoul["job_last_paid"] = paid_through
+		var/list/activity_log = ghoul["activity"]
+		UNTYPED_LIST_ADD(activity_log, list("text" = "Job income: +$[income]", "time" = time2text(paid_through, "Month DD, hh:mm")))
+		changed = TRUE
+	if(changed)
+		prefs.save_character()
+
 /datum/ghoul_manager/proc/outfit_presets()
 	return list(
 		list("outfit" = "bandit", "shoes" = "jackboots_work"),
@@ -53,19 +107,27 @@
 		"hair_buzzcut", "hair_crewcut", "hair_shorthair2", "hair_shorthair3",
 		"hair_bob", "hair_messy", "hair_a", "hair_b", "hair_ponytail", "hair_bun",
 	)
+	var/list/hair_colors = list(
+		"#1a1008", "#2b1d0e", "#3d2b1f", "#6b4226", "#8b1a1a",
+		"#c8a96e", "#d4a855", "#aaaaaa", "#4a3728",
+	)
 	var/list/outfit_pool = outfit_presets()
 	pending_recruits = list()
 	for(var/i in 1 to 3)
 		var/list/firstnames = prob(50) ? GLOB.first_names_male : GLOB.first_names_female
 		var/name = "[pick(firstnames)] [pick(GLOB.last_names)]"
 		var/hair = pick(hair_options)
+		var/hair_color = pick(hair_colors)
 		var/list/outfit = pick(outfit_pool)
 		outfit_pool -= outfit
+		var/recruit_personality = pick(list("passive", "emphatic", "scared"))
 		UNTYPED_LIST_ADD(pending_recruits, list(
 			"name" = name,
 			"hair_style" = hair,
+			"hair_color" = hair_color,
 			"outfit" = outfit["outfit"],
 			"shoes" = outfit["shoes"],
+			"personality" = recruit_personality,
 		))
 
 /obj/item/smartphone/ui_data(mob/living/user)
@@ -77,9 +139,13 @@
 		if(ghoul_manager)
 			if(!ghoul_manager.pending_recruits)
 				ghoul_manager.generate_recruits()
+			ghoul_manager.process_completed_tasks(user.client.prefs)
+			ghoul_manager.process_job_income(user.client.prefs)
 			data["ghoul_manager_balance"] = ghoul_manager.balance
 			data["ghoul_manager_ghouls"] = ghoul_manager.ghouls
 			data["ghoul_manager_recruits"] = ghoul_manager.pending_recruits
+			data["ghoul_manager_tasks"] = ghoul_manager.task_list()
+			data["current_realtime"] = world.realtime
 	return data
 
 /obj/item/smartphone/ui_act(action, params, datum/tgui/ui)
@@ -111,9 +177,12 @@
 			if(!get_kindred_splat(usr) || !ghoul_manager || !ghoul_manager.pending_recruits)
 				return FALSE
 			var/list/chosen = null
-			for(var/list/recruit in ghoul_manager.pending_recruits)
+			var/chosen_index = 0
+			for(var/i in 1 to length(ghoul_manager.pending_recruits))
+				var/list/recruit = ghoul_manager.pending_recruits[i]
 				if(recruit["name"] == params["name"])
 					chosen = recruit
+					chosen_index = i
 					break
 			if(!chosen || ghoul_manager.find(chosen["name"]))
 				return FALSE
@@ -123,10 +192,20 @@
 				"current_task" = "",
 				"talk_text" = "",
 				"hair_style" = chosen["hair_style"],
+				"hair_color" = chosen["hair_color"],
 				"outfit" = chosen["outfit"],
 				"shoes" = chosen["shoes"],
+				"personality" = chosen["personality"],
+				"mood" = 5,
+				"task_started" = 0,
+				"task_duration" = 0,
+				"job_wage_amount" = 0,
+				"started_working_job" = 0,
+				"job_last_paid" = 0,
+				"completed_tasks" = list(),
+			"activity" = list(list("text" = "Recruited", "time" = station_time_timestamp("Month DD, hh:mm"))),
 			))
-			ghoul_manager.pending_recruits.Remove(chosen)
+			ghoul_manager.pending_recruits.Cut(chosen_index, chosen_index + 1)
 			prefs.save_character()
 			return TRUE
 
@@ -136,9 +215,22 @@
 			var/list/ghoul = ghoul_manager.find(params["name"])
 			if(!ghoul)
 				return FALSE
-			var/task = "foo"
-			// todo
-			ghoul["current_task"] = sanitize(task)
+			if(ghoul["current_task"] && ghoul["task_started"] && world.realtime < ghoul["task_started"] + ghoul["task_duration"])
+				return FALSE
+			var/task_id = params["task_id"]
+			var/list/task_def = null
+			for(var/list/task in ghoul_manager.task_list())
+				if(task["id"] == task_id)
+					task_def = task
+					break
+			if(!task_def)
+				return FALSE
+			var/duration = (task_def["duration_hours"] + rand(0, 2)) * 36000
+			ghoul["current_task"] = task_id
+			ghoul["task_started"] = world.realtime
+			ghoul["task_duration"] = duration
+			var/list/activity_log = ghoul["activity"]
+			UNTYPED_LIST_ADD(activity_log, list("text" = "Assigned: [task_def["label"]]", "time" = station_time_timestamp("Month DD, hh:mm")))
 			prefs.save_character()
 			return TRUE
 
@@ -152,15 +244,21 @@
 			prefs.save_character()
 			return TRUE
 
-		if("ghoul_manager_set_health")
+		if("ghoul_manager_release")
 			if(!get_kindred_splat(usr) || !ghoul_manager)
 				return FALSE
-			var/new_status = params["status"]
-			if(!(new_status in list("healthy", "injured", "incapacitated")))
+			var/target_name = params["name"]
+			var/ghoul_index = 0
+			for(var/i in 1 to length(ghoul_manager.ghouls))
+				var/list/g = ghoul_manager.ghouls[i]
+				if(g["name"] == target_name)
+					ghoul_index = i
+					break
+			if(!ghoul_index)
 				return FALSE
-			var/list/ghoul = ghoul_manager.find(params["name"])
-			if(!ghoul)
+			var/confirm = tgui_alert(usr, "Release [target_name]? This cannot be undone.", "Release Ghoul", list("Release", "Cancel"))
+			if(confirm != "Release")
 				return FALSE
-			ghoul["health_status"] = new_status
+			ghoul_manager.ghouls.Cut(ghoul_index, ghoul_index + 1)
 			prefs.save_character()
 			return TRUE

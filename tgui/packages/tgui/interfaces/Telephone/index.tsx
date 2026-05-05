@@ -20,21 +20,44 @@ import { ScreenSoundSettings } from './ScreenSoundSettings';
 // TFN EDIT START
 import { ScreenGhoulManager } from './ScreenGhoulManager';
 
+export type GhoulManagerActivity = {
+  text: string;
+  time: string;
+};
+
+export type GhoulManagerTask = {
+  id: string;
+  label: string;
+  duration_hours: number;
+  details: string;
+  requires?: string;
+};
+
 export type GhoulManagerGhoul = {
   name: string;
   health_status: string;
   current_task: string;
+  task_started: number;
+  task_duration: number;
   talk_text: string;
   hair_style: string;
+  hair_color: string;
   outfit: string;
   shoes: string;
+  personality: string;
+  mood: number;
+  job_wage_amount: number;
+  completed_tasks: string[];
+  activity: GhoulManagerActivity[];
 };
 
 export type GhoulManagerRecruit = {
   name: string;
   hair_style: string;
+  hair_color: string;
   outfit: string;
   shoes: string;
+  personality: string;
 };
 // TFN EDIT END
 
@@ -122,6 +145,8 @@ export type Data = {
   ghoul_manager_balance?: number;
   ghoul_manager_ghouls?: GhoulManagerGhoul[];
   ghoul_manager_recruits?: GhoulManagerRecruit[];
+  ghoul_manager_tasks?: GhoulManagerTask[];
+  current_realtime?: number;
   // TFN EDIT END
 };
 
