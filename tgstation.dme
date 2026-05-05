@@ -7900,6 +7900,7 @@
 #include "modular_tfn\modules\phones\code\endpost_announce.dm"
 #include "modular_tfn\modules\phones\code\ghoul_manager.dm"
 #include "modular_tfn\modules\phones\code\ghoul_manager_tasks.dm"
+#include "modular_tfn\modules\phones\code\ghoul_manager_speech.dm"
 #include "modular_tfn\modules\phones\code\phone_subtypes.dm"
 #include "modular_tfn\modules\powers\code\admin_discipline_editor.dm"
 #include "modular_tfn\modules\radios\code\transceiver.dm"

@@ -22,6 +22,8 @@
 	var/balance = 0
 	var/list/ghouls = list()
 	var/list/pending_recruits
+	var/deposit_remaining = 10000
+	COOLDOWN_DECLARE(talk_cooldown)
 
 /datum/ghoul_manager/proc/find(name)
 	for(var/list/ghoul in ghouls)
@@ -41,7 +43,7 @@
 			if(task["id"] == ghoul["current_task"])
 				task_def = task
 				break
-		var/completion_stamp = time2text(completion_time, "Month DD, hh:mm")
+		var/completion_stamp = ghoul["completion_stamp"] || time2text(world.time, "Month DD, hh:mm")
 		var/list/activity_log = ghoul["activity"]
 		if(task_def)
 			var/mood_change = task_def["mood_change"] || 0
@@ -50,8 +52,11 @@
 			if(task_def["job_wage"])
 				ghoul["job_wage_amount"] = task_def["job_wage"]
 				ghoul["started_working_job"] = completion_time
-				ghoul["job_last_paid"] = completion_time
-			UNTYPED_LIST_ADD(activity_log, list("text" = task_def["completion_text"] || "Completed task", "time" = completion_stamp))
+				ghoul["job_start_game_time"] = world.time
+				ghoul["job_days_paid"] = 0
+			if(task_def["balance_bonus"])
+				balance += task_def["balance_bonus"]
+			UNTYPED_LIST_ADD(activity_log, list("text" = task_def["completion_text"] || "Completed task", "time" = completion_stamp, "outgoing" = FALSE))
 		var/list/completed = ghoul["completed_tasks"]
 		if(!islist(completed))
 			completed = list()
@@ -67,17 +72,19 @@
 /datum/ghoul_manager/proc/process_job_income(datum/preferences/prefs)
 	var/changed = FALSE
 	for(var/list/ghoul in ghouls)
-		if(!ghoul["job_wage_amount"] || !ghoul["job_last_paid"])
+		if(!ghoul["job_wage_amount"] || !ghoul["started_working_job"])
 			continue
-		var/days_elapsed = floor((world.realtime - ghoul["job_last_paid"]) / 864000)
-		if(days_elapsed < 1)
+		var/days_elapsed = floor((world.realtime - ghoul["started_working_job"]) / 864000)
+		var/days_paid = ghoul["job_days_paid"] || 0
+		var/days_to_pay = days_elapsed - days_paid
+		if(days_to_pay < 1)
 			continue
-		var/income = days_elapsed * ghoul["job_wage_amount"]
+		var/income = days_to_pay * ghoul["job_wage_amount"]
 		balance += income
-		var/paid_through = ghoul["job_last_paid"] + (days_elapsed * 864000)
-		ghoul["job_last_paid"] = paid_through
+		ghoul["job_days_paid"] = days_elapsed
 		var/list/activity_log = ghoul["activity"]
-		UNTYPED_LIST_ADD(activity_log, list("text" = "Job income: +$[income]", "time" = time2text(paid_through, "Month DD, hh:mm")))
+		var/payment_stamp = time2text((ghoul["job_start_game_time"] || world.time) + (days_elapsed * 864000), "Month DD, hh:mm")
+		UNTYPED_LIST_ADD(activity_log, list("text" = "Job income: +$[income]", "time" = payment_stamp, "outgoing" = FALSE))
 		changed = TRUE
 	if(changed)
 		prefs.save_character()
@@ -109,7 +116,7 @@
 	)
 	var/list/hair_colors = list(
 		"#1a1008", "#2b1d0e", "#3d2b1f", "#6b4226", "#8b1a1a",
-		"#c8a96e", "#d4a855", "#aaaaaa", "#4a3728",
+		"#c8a96e", "#d4a855", "#002262", "#4a3728",
 	)
 	var/list/outfit_pool = outfit_presets()
 	pending_recruits = list()
@@ -164,13 +171,17 @@
 			var/mob/living/carbon/human/manager_person = usr
 			var/datum/bank_account/account = manager_person.account_id ? SSeconomy.bank_accounts_by_id["[manager_person.account_id]"] : null
 			if(!account || !account.has_money(amount))
-				to_chat(usr, span_warning("insufficient funds."))
+				to_chat(usr, span_warning("Insufficient funds!"))
+				return FALSE
+			var/deposited = round(amount * 0.6)
+			if(!ghoul_manager.deposit_remaining || deposited > ghoul_manager.deposit_remaining)
+				to_chat(usr, span_warning("Daily deposit limit reached. Resets every day at 8:00am."))
 				return FALSE
 			account.adjust_money(-amount, "Shr3kN3t M4n4g3m3nt deposit")
-			var/deposited = round(amount * 0.6)
 			ghoul_manager.balance += deposited
+			ghoul_manager.deposit_remaining -= deposited
 			prefs.save_character()
-			to_chat(usr, span_notice("transferred $[amount]. $[deposited] deposited after 40% fee."))
+			to_chat(usr, span_notice("Transferred $[amount]. $[deposited] deposited after 40% fee. You can deposit $[ghoul_manager.deposit_remaining] more before hitting your daily deposit limit."))
 			return TRUE
 
 		if("ghoul_manager_recruit")
@@ -201,9 +212,10 @@
 				"task_duration" = 0,
 				"job_wage_amount" = 0,
 				"started_working_job" = 0,
-				"job_last_paid" = 0,
+				"job_days_paid" = 0,
+				"job_start_game_time" = 0,
 				"completed_tasks" = list(),
-			"activity" = list(list("text" = "Recruited", "time" = station_time_timestamp("Month DD, hh:mm"))),
+			"activity" = list(list("text" = ghoul_manager.get_speech(chosen["personality"], "greeting"), "time" = time2text(world.time, "Month DD, hh:mm"), "outgoing" = FALSE)),
 			))
 			ghoul_manager.pending_recruits.Cut(chosen_index, chosen_index + 1)
 			prefs.save_character()
@@ -225,22 +237,51 @@
 					break
 			if(!task_def)
 				return FALSE
-			var/duration = (task_def["duration_hours"] + rand(0, 2)) * 36000
+			var/list/completed_check = ghoul["completed_tasks"]
+			if(islist(completed_check) && completed_check.Find(task_id))
+				return FALSE
+			if(task_def["requires"] && !(islist(completed_check) && completed_check.Find(task_def["requires"])))
+				return FALSE
+			if(task_def["conflicts"] && islist(completed_check))
+				var/conflicts = task_def["conflicts"]
+				var/list/conflict_list = islist(conflicts) ? conflicts : list(conflicts)
+				for(var/conflict in conflict_list)
+					if(completed_check.Find(conflict))
+						return FALSE
+			var/duration = task_def["duration_hours"] * 36000
 			ghoul["current_task"] = task_id
 			ghoul["task_started"] = world.realtime
 			ghoul["task_duration"] = duration
+			ghoul["completion_stamp"] = time2text(world.time + duration, "Month DD, hh:mm")
 			var/list/activity_log = ghoul["activity"]
-			UNTYPED_LIST_ADD(activity_log, list("text" = "Assigned: [task_def["label"]]", "time" = station_time_timestamp("Month DD, hh:mm")))
+			var/assign_stamp = time2text(world.time, "Month DD, hh:mm")
+			UNTYPED_LIST_ADD(activity_log, list("text" = task_def["label"], "time" = assign_stamp, "outgoing" = TRUE))
+			var/accept_text = ghoul_manager.get_speech(ghoul["personality"], "accept_task")
+			ghoul["talk_text"] = accept_text
+			if(accept_text)
+				UNTYPED_LIST_ADD(activity_log, list("text" = accept_text, "time" = assign_stamp, "outgoing" = FALSE))
 			prefs.save_character()
 			return TRUE
 
-		if("ghoul_manager_talk")
+		if("ghoul_manager_talk") // ghouls need enrichment, talk to them
 			if(!get_kindred_splat(usr) || !ghoul_manager)
 				return FALSE
 			var/list/ghoul = ghoul_manager.find(params["name"])
 			if(!ghoul)
 				return FALSE
-			ghoul["talk_text"] = "Hello!"
+			if(!COOLDOWN_FINISHED(ghoul_manager, talk_cooldown))
+				to_chat(usr, span_notice("Try again later."))
+				return FALSE
+			COOLDOWN_START(ghoul_manager, talk_cooldown, 10 SECONDS)
+			var/talk_stamp = time2text(world.time, "Month DD, hh:mm")
+			var/list/activity_log = ghoul["activity"]
+			var/prompt = params["prompt"]
+			if(prompt)
+				UNTYPED_LIST_ADD(activity_log, list("text" = prompt, "time" = talk_stamp, "outgoing" = TRUE))
+			var/greeting = ghoul_manager.get_speech(ghoul["personality"], "greeting")
+			ghoul["talk_text"] = greeting
+			if(greeting)
+				UNTYPED_LIST_ADD(activity_log, list("text" = greeting, "time" = talk_stamp, "outgoing" = FALSE))
 			prefs.save_character()
 			return TRUE
 

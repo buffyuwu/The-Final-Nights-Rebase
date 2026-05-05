@@ -17,12 +17,12 @@ import { ScreenEndpost } from './ScreenEndpost';
 import { ScreenRecents } from './ScreenRecents';
 import { ScreenSettings } from './ScreenSettings';
 import { ScreenSoundSettings } from './ScreenSoundSettings';
+import { ScreenGhoulManager } from './ScreenGhoulManager'; // TFN EDIT ADD
 // TFN EDIT START
-import { ScreenGhoulManager } from './ScreenGhoulManager';
-
 export type GhoulManagerActivity = {
   text: string;
   time: string;
+  outgoing?: BooleanLike;
 };
 
 export type GhoulManagerTask = {
@@ -31,6 +31,7 @@ export type GhoulManagerTask = {
   duration_hours: number;
   details: string;
   requires?: string;
+  conflicts?: string | string[];
 };
 
 export type GhoulManagerGhoul = {
@@ -261,7 +262,8 @@ const NavigationBar = memo((props: {
     app === NavigableApps.Recents ||
     app === NavigableApps.Messages ||
     app === NavigableApps.IRC ||
-    app === NavigableApps.Endpost
+    app === NavigableApps.Endpost ||
+    app === NavigableApps.GhoulManager // TFN EDIT ADD
   ) {
     textColor = '#000';
   }
@@ -274,7 +276,8 @@ const NavigationBar = memo((props: {
     app === NavigableApps.Recents ||
     app === NavigableApps.Messages ||
     app === NavigableApps.IRC ||
-    app === NavigableApps.Endpost
+    app === NavigableApps.Endpost ||
+    app === NavigableApps.GhoulManager // TFN EDIT ADD
   ) {
     backgroundColor = '#0004';
   }

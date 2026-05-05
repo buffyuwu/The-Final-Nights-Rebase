@@ -1,5 +1,5 @@
 // THIS IS A TFN UI FILE
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useBackend } from 'tgui/backend';
 import { Box, Button, DmIcon, Icon, Input } from 'tgui-core/components';
 
@@ -24,15 +24,38 @@ const HEALTH_COLORS: Record<string, string> = {
   incapacitated: '#a22',
 };
 
-const PERSONALITY_LABELS: Record<string, string> = {
-  passive: 'passive, shy',
-  emphatic: 'emphatic, enthusiastic',
-  scared: 'scared',
+const MOOD_WORDS: string[][] = [
+  ['Miserable', 'Despondent', 'Awful', 'Hopeless'],
+  ['Struggling', 'Worn down', 'Out of sorts', 'Not doing great'],
+  ['Getting by', 'Alright', 'Okay', 'Fine'],
+  ['Doing well', 'Content', 'Pretty good', 'Settled'],
+  ['Thriving', 'Happy', 'Delighted', 'Cheerful'],
+];
+
+const pickMoodWord = (mood: number): string => {
+  const mood_value = mood ?? 5;
+  const tier = mood_value <= 2 ? 0 : mood_value <= 4 ? 1 : mood_value <= 6 ? 2 : mood_value <= 8 ? 3 : 4;
+  const words = MOOD_WORDS[tier];
+  return words[Math.floor(Math.random() * words.length)];
 };
 
-const TASK_LABELS: Record<string, string> = {
-  sleep: 'Get some sleep',
-  retail_job: 'Get a retail job',
+const TALK_PROMPTS = [
+  'How are things?',
+  'Doing okay?',
+  'Updates for me?',
+  'Everything alright?',
+  'Checking in.',
+  'What\'s going on?',
+  'How\'s it going?',
+  'Need anything?',
+];
+
+const to12Hour = (timeStr: string): string => {
+  if (!timeStr) return '';
+  return timeStr.replace(/(\d{1,2}):(\d{2})$/, (_, h, m) => {
+    const hour = parseInt(h, 10);
+    return `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
+  });
 };
 
 const HAIR_FILTERS: Record<string, string> = {
@@ -90,7 +113,7 @@ const topBar = (title: string, onBack: () => void) => (
 );
 
 const ProgressBar = ({ progress, active }: { progress: number; active: boolean }) => (
-  <Box style={{ background: '#111', borderRadius: '2px', height: '5px', overflow: 'hidden' }}>
+  <Box style={{ background: '#474747', borderRadius: '2px', height: '5px', overflow: 'hidden' }}>
     <Box
       style={{
         background: active ? '#8b0000' : '#3a3',
@@ -102,8 +125,9 @@ const ProgressBar = ({ progress, active }: { progress: number; active: boolean }
   </Box>
 );
 
-const GhoulCard = ({ ghoul, onClick }: { ghoul: GhoulManagerGhoul; onClick: () => void }) => {
+const GhoulCard = ({ ghoul, taskLabel, onClick }: { ghoul: GhoulManagerGhoul; taskLabel?: string; onClick: () => void }) => {
   const healthColor = HEALTH_COLORS[ghoul.health_status] || '#888';
+  const moodWord = useMemo(() => pickMoodWord(ghoul.mood ?? 5), [ghoul.name, ghoul.mood]);
   return (
     <Box
       onClick={onClick}
@@ -124,12 +148,12 @@ const GhoulCard = ({ ghoul, onClick }: { ghoul: GhoulManagerGhoul; onClick: () =
         <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
           <Box bold style={{ color: '#ccc', fontSize: '0.9em' }}>{ghoul.name}</Box>
           <Box style={{ color: healthColor, fontSize: '0.7em', whiteSpace: 'nowrap', marginLeft: '4px' }}>
-            {ghoul.health_status}
+            {ghoul.health_status.charAt(0).toUpperCase() + ghoul.health_status.slice(1)}
           </Box>
         </Box>
-        <Box style={{ color: '#555', fontSize: '0.7em' }}>{PERSONALITY_LABELS[ghoul.personality] || ghoul.personality}</Box>
+        <Box style={{ color: '#555', fontSize: '0.7em' }}>Status: {moodWord}</Box>
         {!!ghoul.current_task && (
-          <Box style={{ color: '#666', fontSize: '0.72em', marginTop: '2px' }}>task: {TASK_LABELS[ghoul.current_task] || ghoul.current_task}</Box>
+          <Box style={{ color: '#666', fontSize: '0.72em', marginTop: '2px' }}>Task: {taskLabel || ghoul.current_task}</Box>
         )}
       </Box>
     </Box>
@@ -144,6 +168,8 @@ const GhoulDetail = ({ ghoul, onBack }: { ghoul: GhoulManagerGhoul; onBack: () =
   const activity = [...(ghoul.activity || [])].reverse();
   const tasks = data.ghoul_manager_tasks || [];
   const now = data.current_realtime || 0;
+
+  const moodWord = useMemo(() => pickMoodWord(ghoul.mood ?? 5), [ghoul.name, ghoul.mood]);
 
   const taskActive = !!(ghoul.current_task && ghoul.task_started && ghoul.task_duration && now < ghoul.task_started + ghoul.task_duration);
   const taskProgress = ghoul.task_started && ghoul.task_duration
@@ -162,103 +188,122 @@ const GhoulDetail = ({ ghoul, onBack }: { ghoul: GhoulManagerGhoul; onBack: () =
       <Box
         style={{
           flex: 1,
-          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
           marginTop: '-56px',
           background: '#141414',
           borderRadius: '8px 8px 0 0',
-          padding: '12px',
           position: 'relative',
           zIndex: 1,
+          overflow: 'hidden',
         }}
       >
-        <Box style={{ textAlign: 'center', marginBottom: '2px' }}>
-          <Box bold style={{ color: '#ccc', fontSize: '1em' }}>{ghoul.name}</Box>
-          <Box style={{ color: healthColor, fontSize: '0.72em' }}>{ghoul.health_status}</Box>
-        </Box>
-        <Box style={{ color: '#555', fontSize: '0.72em', textAlign: 'center', marginBottom: '4px' }}>{PERSONALITY_LABELS[ghoul.personality] || ghoul.personality}</Box>
-        <Box style={{ color: '#666', fontSize: '0.72em', textAlign: 'center', marginBottom: '10px' }}>mood: {ghoul.mood ?? 5}/10</Box>
-
-        {!!ghoul.current_task && (
-          <Box style={{ marginBottom: '10px' }}>
-            <Box style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72em', color: '#666', marginBottom: '3px' }}>
-              <Box>{TASK_LABELS[ghoul.current_task] || ghoul.current_task}</Box>
-              {taskActive
-                ? <Box>{hoursRemaining}h remaining</Box>
-                : <Box style={{ color: '#3a3' }}>complete</Box>}
+        <Box style={{ padding: '12px 12px 0 12px', flexShrink: 0 }}>
+          <Box style={{ textAlign: 'center', marginBottom: '2px' }}>
+            <Box bold style={{ color: '#ccc', fontSize: '1em' }}>{ghoul.name}</Box>
+            <Box style={{ fontSize: '0.72em' }}>
+              <span style={{ color: '#ccc' }}>Status: </span>
+              <span style={{ color: healthColor }}>{ghoul.health_status.charAt(0).toUpperCase() + ghoul.health_status.slice(1)}</span>
             </Box>
-            <ProgressBar progress={taskProgress} active={taskActive} />
           </Box>
-        )}
+          <Box style={{ fontSize: '0.72em', textAlign: 'center', marginBottom: '10px' }}>
+            <span style={{ color: '#ccc' }}>Status: </span>
+            <span style={{ color: (ghoul.mood ?? 5) <= 3 ? '#8b0000' : (ghoul.mood ?? 5) <= 6 ? '#c87000' : '#3a3' }}>{moodWord}</span>
+          </Box>
 
-        <Box style={{ display: 'flex', gap: '4px', marginBottom: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {!taskActive && (
-            <Button style={showAssignTask ? BUTTON_DARK : BUTTON_RED} onClick={() => setShowAssignTask(!showAssignTask)}>
-              {showAssignTask ? 'Cancel' : 'Assign Task'}
-            </Button>
-          )}
-          <Button style={BUTTON_DARK} onClick={() => act('ghoul_manager_talk', { name: ghoul.name })}>
-            Talk
-          </Button>
-          <Button style={BUTTON_DANGER} onClick={() => act('ghoul_manager_release', { name: ghoul.name })}>
-            Release
-          </Button>
-        </Box>
-
-        {showAssignTask ? (
-          <Box>
-            <Box style={{ color: '#444', fontSize: '0.72em', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              assign task
-            </Box>
-            {tasks.filter((task) => !task.requires || (ghoul.completed_tasks || []).includes(task.requires)).map((task) => (
-              <Box
-                key={task.id}
-                onClick={() => {
-                  act('ghoul_manager_assign_task', { name: ghoul.name, task_id: task.id });
-                  setShowAssignTask(false);
-                }}
-                style={{
-                  border: '1px solid #2a2a2a',
-                  borderRadius: '4px',
-                  padding: '10px',
-                  marginBottom: '6px',
-                  cursor: 'pointer',
-                  background: '#1a1a1a',
-                }}
-              >
-                <Box bold style={{ color: '#ccc', fontSize: '0.9em', marginBottom: '2px' }}>{task.label}</Box>
-                <Box style={{ color: '#555', fontSize: '0.75em', marginBottom: '2px' }}>{task.details}</Box>
-                <Box style={{ color: '#444', fontSize: '0.72em' }}>{task.duration_hours}h</Box>
+          {!!ghoul.current_task && (
+            <Box style={{ marginBottom: '10px' }}>
+              <Box style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72em', color: '#666', marginBottom: '3px' }}>
+                <Box>{tasks.find((t) => t.id === ghoul.current_task)?.label || ghoul.current_task}</Box>
+                {taskActive
+                  ? <Box>{hoursRemaining}h remaining</Box>
+                  : <Box style={{ color: '#3a3' }}>complete</Box>}
               </Box>
-            ))}
-          </Box>
-        ) : (
-          <Box>
-            <Box style={{ color: '#444', fontSize: '0.72em', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              recent activity
+              <ProgressBar progress={taskProgress} active={taskActive} />
             </Box>
-            {activity.length === 0 ? (
-              <Box style={{ color: '#333', fontSize: '0.75em' }}>no activity recorded</Box>
-            ) : (
-              activity.map((entry, i) => (
+          )}
+
+          <Box style={{ display: 'flex', gap: '4px', marginBottom: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {!taskActive && (
+              <Button style={showAssignTask ? BUTTON_DARK : BUTTON_RED} onClick={() => setShowAssignTask(!showAssignTask)}>
+                {showAssignTask ? 'Cancel' : 'Assign Task'}
+              </Button>
+            )}
+            <Button style={BUTTON_DARK} onClick={() => act('ghoul_manager_talk', { name: ghoul.name, prompt: TALK_PROMPTS[Math.floor(Math.random() * TALK_PROMPTS.length)] })}>
+              Talk
+            </Button>
+            <Button style={BUTTON_DANGER} onClick={() => act('ghoul_manager_release', { name: ghoul.name })}>
+              Release
+            </Button>
+          </Box>
+        </Box>
+        <Box style={{ flex: 1, overflowY: 'auto', padding: '0.5em 12px 3em', background: '#fff' }}>
+          {showAssignTask ? (
+            <Box>
+              <Box style={{ color: '#444', fontSize: '0.72em', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                assign task
+              </Box>
+              {tasks.filter((task) => {
+                const completed = ghoul.completed_tasks || [];
+                if (completed.includes(task.id)) return false;
+                if (task.requires && !completed.includes(task.requires)) return false;
+                if (task.conflicts) {
+                  const conflictList = Array.isArray(task.conflicts) ? task.conflicts : [task.conflicts];
+                  if (conflictList.some((c) => completed.includes(c))) return false;
+                }
+                return true;
+              }).map((task) => (
                 <Box
-                  key={i}
+                  key={task.id}
+                  onClick={() => {
+                    act('ghoul_manager_assign_task', { name: ghoul.name, task_id: task.id });
+                    setShowAssignTask(false);
+                  }}
                   style={{
-                    background: '#1a1a1a',
+                    border: '1px solid #2a2a2a',
                     borderRadius: '4px',
-                    padding: '5px 8px',
-                    marginBottom: '4px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    padding: '10px',
+                    marginBottom: '6px',
+                    cursor: 'pointer',
+                    background: '#1a1a1a',
                   }}
                 >
-                  <Box style={{ color: '#aaa', fontSize: '0.78em' }}>{entry.text}</Box>
-                  <Box style={{ color: '#444', fontSize: '0.7em', marginLeft: '8px', whiteSpace: 'nowrap' }}>{entry.time}</Box>
+                  <Box bold style={{ color: '#ccc', fontSize: '0.9em', marginBottom: '2px' }}>{task.label}</Box>
+                  <Box style={{ color: '#555', fontSize: '0.75em', marginBottom: '2px' }}>{task.details}</Box>
+                  <Box style={{ color: '#444', fontSize: '0.72em' }}>{task.duration_hours}h</Box>
                 </Box>
-              ))
-            )}
-          </Box>
-        )}
+              ))}
+            </Box>
+          ) : (
+            <Box>
+              {activity.length === 0 ? (
+                <Box style={{ color: '#333', fontSize: '0.75em', textAlign: 'center' }}>no messages yet</Box>
+              ) : (
+                activity.map((entry, i) => {
+                  const out = !!entry.outgoing;
+                  return (
+                    <Box key={i} style={{ display: 'flex', justifyContent: out ? 'flex-end' : 'flex-start', marginBottom: '6px' }}>
+                      <Box style={{
+                        background: out ? '#0069ff' : '#e8e8e8',
+                        color: out ? '#fff' : '#000',
+                        borderRadius: out ? '10px 10px 2px 10px' : '10px 10px 10px 2px',
+                        padding: '6px 10px',
+                        maxWidth: '78%',
+                        wordWrap: 'break-word',
+                        fontSize: '0.8em',
+                      }}>
+                        {entry.text}
+                        <Box style={{ fontSize: '0.72em', color: out ? '#ffffff' : '#777', marginTop: '3px', textAlign: out ? 'right' : 'left' }}>
+                          {to12Hour(entry.time)}
+                        </Box>
+                      </Box>
+                    </Box>
+                  );
+                })
+              )}
+            </Box>
+          )}
+        </Box>
       </Box>
     </Box>
   );
@@ -278,8 +323,7 @@ const RecruitCard = ({ recruit, act }: { recruit: GhoulManagerRecruit; act: any 
   >
     <GhoulSprite hairStyle={recruit.hair_style} hairColor={recruit.hair_color} outfit={recruit.outfit} shoes={recruit.shoes} size={48} />
     <Box style={{ flex: 1 }}>
-      <Box bold style={{ color: '#ccc', fontSize: '0.9em', marginBottom: '2px' }}>{recruit.name}</Box>
-      <Box style={{ color: '#555', fontSize: '0.72em', marginBottom: '6px' }}>{PERSONALITY_LABELS[recruit.personality]}</Box>
+      <Box bold style={{ color: '#ccc', fontSize: '0.9em', marginBottom: '6px' }}>{recruit.name}</Box>
       <Button style={BUTTON_RED} onClick={() => act('ghoul_manager_recruit', { name: recruit.name })}>
         Recruit
       </Button>
@@ -387,11 +431,16 @@ export const ScreenGhoulManager = (props: {
 
         {ghouls.length === 0 ? (
           <Box style={{ color: '#444', fontSize: '0.8em', textAlign: 'center', padding: '16px 0' }}>
-            no ghouls registered :c
+            no ghouls registered. recruit one!
           </Box>
         ) : (
           ghouls.map((ghoul) => (
-            <GhoulCard key={ghoul.name} ghoul={ghoul} onClick={() => setSelectedGhoul(ghoul.name)} />
+            <GhoulCard
+                key={ghoul.name}
+                ghoul={ghoul}
+                taskLabel={(data.ghoul_manager_tasks || []).find((t) => t.id === ghoul.current_task)?.label}
+                onClick={() => setSelectedGhoul(ghoul.name)}
+              />
           ))
         )}
       </Box>
