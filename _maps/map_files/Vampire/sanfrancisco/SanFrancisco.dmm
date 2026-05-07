@@ -24114,12 +24114,15 @@
 /turf/open/floor/city/circled/large,
 /area/vtm/interior/subway)
 "gdT" = (
+/obj/structure/railing{
+	dir = 8
+	},
 /obj/effect/turf_decal/bordur{
-	dir = 1
+	dir = 8
 	},
 /obj/effect/landmark/npcbeacon,
-/turf/open/floor/plating/sidewalk,
-/area/vtm/outside/pacificheights/industrial)
+/turf/open/floor/plating/sidewalk/rich,
+/area/vtm/outside/baywalk)
 "gdY" = (
 /obj/structure/extinguisher_cabinet/directional/west,
 /turf/open/floor/city/plating_mono,
@@ -89296,6 +89299,16 @@
 /obj/effect/turf_decal/bordur,
 /turf/open/floor/plating/concrete,
 /area/vtm/outside/culture)
+"wBu" = (
+/obj/structure/railing/corner{
+	dir = 8
+	},
+/obj/effect/turf_decal/bordur{
+	dir = 10
+	},
+/obj/effect/landmark/npcbeacon,
+/turf/open/floor/plating/sidewalk/rich,
+/area/vtm/outside/baywalk)
 "wBy" = (
 /obj/structure/platform/lowwall/bar/window,
 /obj/structure/curtain/bounty{
@@ -151575,7 +151588,7 @@ lLw
 lLw
 lLw
 lLw
-lLw
+wqX
 lLw
 pOA
 lLw
@@ -152799,7 +152812,7 @@ dSH
 isz
 xMd
 lbR
-lbR
+ubj
 lbR
 tvJ
 lbR
@@ -154298,7 +154311,7 @@ bLF
 kpf
 tao
 mmB
-tML
+tao
 ajj
 dCQ
 eWf
@@ -154313,7 +154326,7 @@ uDw
 uDw
 uDw
 tow
-tML
+tao
 ajj
 eWf
 eWf
@@ -154501,7 +154514,7 @@ xQB
 hZr
 kpf
 tao
-tML
+tao
 tao
 ajj
 dCQ
@@ -154516,7 +154529,7 @@ uDw
 wnh
 wnh
 wnh
-gdT
+tow
 tao
 ajj
 eWf
@@ -155521,7 +155534,7 @@ uQK
 hbR
 klS
 rnf
-tML
+tao
 ajj
 aJl
 cJY
@@ -155724,7 +155737,7 @@ uQK
 dxi
 uhQ
 klS
-tML
+tao
 mmB
 ajj
 whg
@@ -162264,7 +162277,7 @@ ioK
 fzy
 fzy
 fzy
-jLI
+wBu
 eef
 kRl
 mjT
@@ -162676,7 +162689,7 @@ fzy
 fzy
 fzy
 jLI
-eef
+gdT
 vLZ
 kRl
 mjT
@@ -168968,7 +168981,7 @@ cOT
 gXN
 iEh
 iEh
-iEh
+xSz
 lGt
 tnc
 xTg
@@ -169782,7 +169795,7 @@ vxQ
 ilK
 koE
 iEh
-iEh
+xSz
 iEh
 joX
 qdm
