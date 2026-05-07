@@ -96,4 +96,8 @@
 /obj/fusebox/transformer/Initialize(mapload)
 	. = ..()
 	soundloop = new(src, TRUE)
+	// TFN EDIT START
+	soundloop.ignore_walls = FALSE
+	soundloop.extra_range = -13
+	// TFN EDIT END
 
