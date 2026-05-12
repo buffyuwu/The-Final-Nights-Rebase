@@ -26,13 +26,13 @@
 
 	register_to_availability_signals()
 
-// TFN EDIT START
 /datum/action/discipline/Destroy()
 	QDEL_NULL(discipline)
 	return ..()
-// TFN EDIT END
 
 /datum/action/discipline/Remove(mob/owner)
+	if(discipline)
+		discipline.post_loss()
 	end_targeting()
 	if(owner)
 		UnregisterSignal(owner, list(
@@ -94,8 +94,10 @@
 /datum/action/discipline/IsAvailable(feedback)
 	return discipline?.current_power?.can_activate_untargeted(feedback)
 
-/datum/action/discipline/Trigger(trigger_flags)
+/datum/action/discipline/Trigger(mob/clicker, trigger_flags)
 	. = ..()
+	if(!.)
+		return
 
 	build_all_button_icons(UPDATE_BUTTON_STATUS)
 

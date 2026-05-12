@@ -184,12 +184,10 @@
 		var/mob/living/carbon/human/husrc = src // gross istypesrc but easier than refactoring even further for now
 		if(husrc.skin_tone == "albino")
 			apparent_blood_volume -= (BLOOD_VOLUME_NORMAL * 0.25) // knocks you down a few pegs
-	if(HAS_TRAIT(user, TRAIT_COLD_AURA))
-		apparent_blood_volume -= (BLOOD_VOLUME_NORMAL * 0.25)
-	if(HAS_TRAIT(user, TRAIT_WARM_AURA))
-		apparent_blood_volume += (BLOOD_VOLUME_NORMAL * 0.25)
+	// DARKPACK EDIT ADD START
 	if(HAS_TRAIT(user, TRAIT_BLUSH_OF_HEALTH))
 		apparent_blood_volume += (BLOOD_VOLUME_NORMAL * 0.50)
+	// DAKRPACK EDIT ADD END
 	switch(apparent_blood_volume)
 		if(BLOOD_VOLUME_OKAY to BLOOD_VOLUME_SAFE)
 			. += span_warning("[t_He] [t_has] pale skin.")
@@ -265,8 +263,10 @@
 			var/npc_message = ""
 			if(HAS_TRAIT(brain, TRAIT_GHOSTROLE_ON_REVIVE) || HAS_TRAIT(src, TRAIT_GHOSTROLE_ON_REVIVE))
 				npc_message = "Soul is pending..."
-			else if(isnpc(src)) // DARKPACK EDIT ADD START
-				npc_message = "[t_He] looks busy. Probably wise not to bother [t_him]." // DARKPACK EDIT ADD END
+				// TFN EDIT START - player controlled npcs shouldnt show the typical npc examine message
+			else if(isnpc(src) && !mind)
+				npc_message = "[t_He] looks busy. Probably wise not to bother [t_him]."
+				// TFN EDIT END
 			else if(!key)
 				npc_message = "[t_He] [t_is] totally catatonic. The horrors of this place must have been too much for [t_him]. Any recovery is unlikely." // DARKPACK EDIT CHANGE
 			else if(!client)
