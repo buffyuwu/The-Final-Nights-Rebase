@@ -17,6 +17,7 @@ import { ScreenEndpost } from './ScreenEndpost';
 import { ScreenRecents } from './ScreenRecents';
 import { ScreenSettings } from './ScreenSettings';
 import { ScreenSoundSettings } from './ScreenSoundSettings';
+import { ScreenContracts } from './ScreenContracts'; // TFN EDIT ADD
 
 export type Contact = {
   name: string;
@@ -97,6 +98,40 @@ export type Data = {
 
   conversations: Conversation[];
   current_conversation_messages: ConversationMessage[];
+  // TFN EDIT ADD START - PERSONAL_OBJECTIVES
+  is_kindred?: boolean;
+  available_contracts?: {
+    type: string;
+    name: string;
+    summary: string;
+    difficulty: number;
+    is_player_contract?: boolean;
+    poster?: string;
+    reward?: number;
+    player_contract_id?: number;
+  }[];
+  active_contracts?: {
+    name: string;
+    description: string;
+    difficulty: number;
+    progress: string | null;
+    completed: boolean;
+    is_player_contract?: boolean;
+    reward?: number;
+    poster?: string;
+  }[];
+  triumphs?: number;
+  shr3knet_username?: string;
+  leaderboard?: { username: string; triumphs: number; is_self: boolean }[];
+  my_posted_contract?: {
+    id: number;
+    name: string;
+    description: string;
+    reward: number;
+    claimer_name: string | null;
+    is_claimed: boolean;
+  } | null;
+  // TFN EDIT ADD END
 };
 
 export enum NavigableApps {
@@ -110,6 +145,7 @@ export enum NavigableApps {
   Settings,
   SoundSettings,
   Endpost,
+  Contracts, // TFN EDIT ADD
 }
 
 const PhysicalScreen = memo((props: {
@@ -182,6 +218,10 @@ const PhysicalScreen = memo((props: {
         return <ScreenSoundSettings setApp={setApp} />;
       case NavigableApps.Endpost:
         return <ScreenEndpost setApp={setApp} />;
+      // TFN EDIT ADD START - PERSONAL_OBJECTIVES
+      case NavigableApps.Contracts:
+        return <ScreenContracts setApp={setApp} />;
+      // TFN EDIT ADD END
       default:
         return <ScreenHome setApp={setApp} />;
     }

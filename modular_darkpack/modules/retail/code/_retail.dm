@@ -181,6 +181,9 @@
 				--product.amount
 				update_static_data(usr)
 			SSblackbox.record_feedback("nested tally", "retail_item_bought", 1, list("[type]", "[product.product_path]"))
+			// TFN EDIT ADD START - PERSONAL_OBJECTIVES
+			SEND_SIGNAL(usr, COMSIG_RETAIL_ITEM_PURCHASED, product.product_path)
+			// TFN EDIT ADD END
 			. = TRUE
 
 #undef SANITIZED_PATH

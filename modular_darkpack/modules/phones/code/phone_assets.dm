@@ -22,4 +22,9 @@
 		"thewhiteclouds_trees_9124293_1280.webp" = 'modular_darkpack/modules/phones/icons/backgrounds/thewhiteclouds_trees_9124293_1280.webp',
 		//browser assets
 		"endron_logo.webp" = 'modular_darkpack/modules/phones/icons/browser/endron_logo.webp',
+		// TFN EDIT ADD START - PERSONAL_OBJECTIVES
+		"mortal_eyes_1.jpg" = 'modular_tfn/modules/personal_objectives/icons/mortal_eyes_1.jpg',
+		"mortal_eyes_2.jpg" = 'modular_tfn/modules/personal_objectives/icons/mortal_eyes_2.jpg',
+		"mortal_eyes_3.jpg" = 'modular_tfn/modules/personal_objectives/icons/mortal_eyes_3.jpg',
+		// TFN EDIT ADD END
 	)

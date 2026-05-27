@@ -257,6 +257,31 @@ export const ScreenHome = (props: {
             </Stack.Item>
           </Stack>
         </Stack.Item>
+        {/* TFN EDIT ADD START - PERSONAL_OBJECTIVES */}
+        <Stack.Item>
+          <Stack fill align="center" justify="flex-start" wrap="wrap" ml={1}>
+            <Stack.Item>
+              {data.is_kindred ? (
+                <AppIcon
+                  backgroundColor="#1a0505"
+                  text="Shr3kNet"
+                  iconName="scroll"
+                  iconColor="#8b0000"
+                  onClick={() => navigateTo(NavigableApps.Contracts)}
+                />
+              ) : (
+                <AppIcon
+                  backgroundColor="#1a2e00"
+                  text="Garbage+"
+                  iconName="trash"
+                  iconColor="#4a7a00"
+                  onClick={() => navigateTo(NavigableApps.Contracts)}
+                />
+              )}
+            </Stack.Item>
+          </Stack>
+        </Stack.Item>
+        {/* TFN EDIT ADD END */}
         <Stack.Item>
           <Stack fill align="center" justify="space-around" wrap="wrap">
             <Stack.Item>

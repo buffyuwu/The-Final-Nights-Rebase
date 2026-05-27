@@ -97,6 +97,9 @@ GLOBAL_LIST_EMPTY(fuseboxes)
 				for(var/obj/machinery/light/L in power_area)
 					L.update(FALSE)
 
+				// TFN EDIT ADD START - PERSONAL_OBJECTIVES
+				SEND_SIGNAL(user, COMSIG_FUSEBOX_REPAIRED)
+				// TFN EDIT ADD END
 				repairing = FALSE
 				return ITEM_INTERACT_SUCCESS
 			if(repair_amount <= 0)
