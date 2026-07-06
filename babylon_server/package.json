@@ -1,0 +1,17 @@
+{
+	"name": "babylon-server",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "bun run --watch src/index.ts",
+		"start": "bun run src/index.ts"
+	},
+	"dependencies": {
+		"@colyseus/schema": "^3.0.0",
+		"@colyseus/ws-transport": "^0.16.0",
+		"colyseus": "^0.16.0"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.2.0"
+	}
+}

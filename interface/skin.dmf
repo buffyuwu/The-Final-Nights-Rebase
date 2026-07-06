@@ -100,6 +100,17 @@ window "mapwindow"
 		is-disabled = true
 		saved-params = ""
 		auto-format = false
+	elem "tfn_babylon_browser"
+		type = BROWSER
+		pos = 0,0
+		size = 640x480
+		anchor1 = 0,0
+		anchor2 = 100,100
+		background-color = none
+		is-visible = false
+		is-disabled = true
+		saved-params = ""
+		auto-format = false
 
 window "info_and_buttons"
 	elem "info_and_buttons"

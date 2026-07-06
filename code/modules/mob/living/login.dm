@@ -19,3 +19,7 @@
 	med_hud_set_status()
 
 	update_fov_client()
+
+	// TFN EDIT ADD START - BABYLON_OVERLAY
+	client.show_babylon_overlay()
+	// TFN EDIT ADD END
