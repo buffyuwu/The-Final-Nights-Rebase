@@ -26,6 +26,7 @@
 </head>
 <body>
 <canvas id="renderer"></canvas>
+<div id="chatLog" class="chat-log"></div>
 <div id="chatBar" class="chat-bar">
 <input id="chatInput" type="text" maxlength="300" autocomplete="off">
 </div>
@@ -46,7 +47,7 @@ window.__BABYLON_PLAYER_CKEY__ = "[ckey]";
 		"index.css" = file("babylon_client/dist/index.css"),
 		"character.glb" = file("babylon_client/dist/character.glb"),
 		"HavokPhysics.wasm" = file("babylon_client/dist/HavokPhysics.wasm"),
-		"236.chunk.js" = file("babylon_client/dist/236.chunk.js"),
+		"1.chunk.js" = file("babylon_client/dist/1.chunk.js"),
 	)
 
 /client/proc/show_babylon_overlay()

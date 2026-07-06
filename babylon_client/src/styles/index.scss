@@ -18,6 +18,31 @@ body {
 	}
 }
 
+.chat-log {
+	position: fixed;
+	bottom: 90px;
+	left: 16px;
+	width: 320px;
+	max-height: 200px;
+	overflow-y: auto;
+	z-index: 10;
+	pointer-events: none;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+
+	.chat-entry {
+		padding: 2px 6px;
+		margin-top: 2px;
+		background: rgba(0, 0, 0, 0.6);
+		color: white;
+		font-family: sans-serif;
+		font-size: 14px;
+		border-radius: 2px;
+		word-break: break-word;
+	}
+}
+
 .chat-bar {
 	display: none;
 	position: fixed;

@@ -16,7 +16,7 @@ import {
 import HavokPhysics from '@babylonjs/havok';
 
 import '../styles/index.scss';
-import { ChatBubbles, initChatInput } from './chat';
+import { ChatBubbles, initChatInput, appendChatLog } from './chat';
 import { CharacterController } from './character';
 import { RemoteCharacter } from './remoteCharacter';
 import { NetworkClient } from './network';
@@ -95,6 +95,8 @@ network.onPlayerAdded = (sessionId, player) => {
 	}
 	RemoteCharacter.CreateAsync(scene, sessionId, player).then((remote) => {
 		remotePlayers.set(sessionId, remote);
+	}).catch((err) => {
+		console.error('RemoteCharacter.CreateAsync failed:', err);
 	});
 };
 
@@ -109,11 +111,12 @@ network.onPlayerRemoved = (sessionId) => {
 
 const chatBubbles = new ChatBubbles(scene);
 
-network.onChatMessage = (sessionId, text) => {
+network.onChatMessage = (sessionId, ckey, text) => {
 	const anchor = sessionId === network.sessionId ? characterController.getTransform() : remotePlayers.get(sessionId)?.root;
 	if (anchor) {
 		chatBubbles.show(anchor, text);
 	}
+	appendChatLog(ckey || sessionId, text);
 };
 
 initChatInput((text) => network.sendChat(text));

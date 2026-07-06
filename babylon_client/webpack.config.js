@@ -12,13 +12,14 @@ const config = {
 	output: {
 		path: path.resolve(__dirname, 'dist'),
 		filename: '[name].js',
-		chunkFilename: '[name].chunk.js',
+		chunkFilename: '[id].chunk.js',
 		assetModuleFilename: '[name][ext]',
 		clean: true,
 	},
 	optimization: {
 		splitChunks: false,
 		runtimeChunk: false,
+		chunkIds: 'natural',
 	},
 	devServer: {
 		open: false,

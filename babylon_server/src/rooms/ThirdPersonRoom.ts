@@ -57,9 +57,8 @@ export class ThirdPersonRoom extends Room<State> {
 			if (!text) {
 				return;
 			}
-			this.broadcast('chat', { sessionId: client.sessionId, text });
-
-			const ckey = this.ckeys.get(client.sessionId);
+			const ckey = this.ckeys.get(client.sessionId) ?? '';
+			this.broadcast('chat', { sessionId: client.sessionId, ckey, text });
 			if (ckey) {
 				enqueueChat(ckey, text);
 			}

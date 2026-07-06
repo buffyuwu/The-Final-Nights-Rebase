@@ -17,7 +17,7 @@ export class NetworkClient {
 	onPlayerAdded: (sessionId: string, player: PlayerState) => void = () => {};
 	onPlayerChanged: (sessionId: string, player: PlayerState) => void = () => {};
 	onPlayerRemoved: (sessionId: string) => void = () => {};
-	onChatMessage: (sessionId: string, text: string) => void = () => {};
+	onChatMessage: (sessionId: string, ckey: string, text: string) => void = () => {};
 
 	get sessionId(): string {
 		if (!this.room) {
@@ -38,8 +38,8 @@ export class NetworkClient {
 		$(this.room.state).players.onRemove((_player: PlayerState, sessionId: string) => {
 			this.onPlayerRemoved(sessionId);
 		});
-		this.room.onMessage('chat', (message: { sessionId: string; text: string }) => {
-			this.onChatMessage(message.sessionId, message.text);
+		this.room.onMessage('chat', (message: { sessionId: string; ckey: string; text: string }) => {
+			this.onChatMessage(message.sessionId, message.ckey, message.text);
 		});
 	}
 
