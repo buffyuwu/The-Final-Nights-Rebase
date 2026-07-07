@@ -4,7 +4,7 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 
 const BUBBLE_DURATION_MS = 5000;
-const HEAD_HEIGHT = 2.2;
+const HEAD_HEIGHT = 1;
 const MAX_LOG_MESSAGES = 30;
 
 export function initChatInput(onSend: (text: string) => void): void {
@@ -75,8 +75,8 @@ export class ChatBubbles {
 		const label = new TextBlock();
 		label.text = text;
 		label.color = 'white';
-		label.fontSize = 16;
-		label.outlineWidth = 4;
+		label.fontSize = 28;
+		label.outlineWidth = 1;
 		label.outlineColor = 'black';
 		label.resizeToFit = true;
 

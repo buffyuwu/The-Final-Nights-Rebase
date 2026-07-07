@@ -96,7 +96,7 @@ network.onPlayerAdded = (sessionId, player) => {
 	RemoteCharacter.CreateAsync(scene, sessionId, player).then((remote) => {
 		remotePlayers.set(sessionId, remote);
 	}).catch((err) => {
-		console.error('RemoteCharacter.CreateAsync failed:', err);
+		network.sendDebug('RemoteCharacter.CreateAsync failed: ' + err);
 	});
 };
 
@@ -119,12 +119,19 @@ network.onChatMessage = (sessionId, ckey, text) => {
 	appendChatLog(ckey || sessionId, text);
 };
 
-initChatInput((text) => network.sendChat(text));
-
 const serverUrl = window.__BABYLON_SERVER_URL__ ?? 'ws://localhost:2567';
 const playerCkey = window.__BABYLON_PLAYER_CKEY__ ?? 'standalone';
-network.connect(serverUrl, playerCkey).catch((error) => {
-	console.error('Failed to connect to babylon_server:', error);
+
+initChatInput((text) => {
+	appendChatLog(playerCkey || 'me', text);
+	network.sendChat(text);
+});
+
+appendChatLog('[babylon]', 'connecting to ' + serverUrl);
+network.connect(serverUrl, playerCkey).then(() => {
+	appendChatLog('[babylon]', 'connected');
+}).catch((error) => {
+	appendChatLog('[error]', 'connection failed: ' + error);
 });
 
 function updateScene() {

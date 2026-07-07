@@ -318,6 +318,8 @@
 
 /datum/config_entry/string/public_address
 
+/datum/config_entry/string/babylon_server_host
+
 /datum/config_entry/string/banappeals
 
 /datum/config_entry/string/wikiurl

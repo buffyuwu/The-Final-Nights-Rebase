@@ -1,3 +1,7 @@
+## Hostname or IP that clients use to reach the Babylon WebSocket server.
+## Set to 127.0.0.1 for local testing. Change to your public IP or domain for hosted servers.
+babylon_server_host 127.0.0.1
+
 ## Defines whether or not mentors can see ckeys alongside mobnames.
 ## uncomment to hide ckeys from mentors
 #MENTORS_MOBNAME_ONLY

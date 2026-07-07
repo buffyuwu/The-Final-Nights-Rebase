@@ -82,6 +82,10 @@
  * * contents_type - the type of contents we want to be looking for. defaults to hearing sensitive
  */
 /proc/get_hearers_in_view(view_radius, atom/source, contents_type=RECURSIVE_CONTENTS_HEARING_SENSITIVE)
+	if(ismob(source))
+		var/mob/source_mob = source
+		if(!isnull(source_mob.babylon_x))
+			return get_hearers_in_range(view_radius, source_mob, contents_type)
 	var/turf/center_turf = get_turf(source)
 	if(!center_turf)
 		return
@@ -131,6 +135,20 @@
  * * contents_type - the type of contents we want to be looking for. defaults to hearing sensitive
  */
 /proc/get_hearers_in_range(range, atom/source, contents_type=RECURSIVE_CONTENTS_HEARING_SENSITIVE)
+	if(ismob(source))
+		var/mob/source_mob = source
+		if(!isnull(source_mob.babylon_x))
+			var/list/result = list()
+			var/range_sq = range * range
+			for(var/client/C in GLOB.clients)
+				if(!C.mob || isnull(C.mob.babylon_x))
+					continue
+				var/dx = C.mob.babylon_x - source_mob.babylon_x
+				var/dy = C.mob.babylon_y - source_mob.babylon_y
+				var/dz = C.mob.babylon_z - source_mob.babylon_z
+				if(dx*dx + dy*dy + dz*dz <= range_sq)
+					result += C.mob
+			return result
 	var/turf/center_turf = get_turf(source)
 	if(!center_turf)
 		return

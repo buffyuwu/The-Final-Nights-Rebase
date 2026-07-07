@@ -1,7 +1,8 @@
 import { type Client, Room } from 'colyseus';
-import { enqueueChat } from '../chatQueue';
+import { enqueueChat, enqueueDebug } from '../chatQueue';
 import { Player } from '../schema/Player';
 import { State } from '../schema/State';
+import { setPosition, removePosition } from '../positionStore';
 
 const PALETTE = [
 	'#e74c3c',
@@ -15,6 +16,7 @@ const PALETTE = [
 ];
 
 const SPAWN_RADIUS = 6;
+const HEAR_DISTANCE = 15;
 
 interface MoveMessage {
 	x: number;
@@ -24,6 +26,10 @@ interface MoveMessage {
 }
 
 interface ChatMessage {
+	text: string;
+}
+
+interface DebugMessage {
 	text: string;
 }
 
@@ -50,6 +56,17 @@ export class ThirdPersonRoom extends Room<State> {
 			player.y = message.y;
 			player.z = message.z;
 			player.rotY = message.rotY;
+			const ckey = this.ckeys.get(client.sessionId);
+			if (ckey) {
+				setPosition(ckey, message.x, message.y, message.z);
+			}
+		});
+
+		this.onMessage('debug', (_client, message: DebugMessage) => {
+			const text = message.text?.trim().slice(0, MAX_CHAT_LENGTH);
+			if (text) {
+				enqueueDebug(text);
+			}
 		});
 
 		this.onMessage('chat', (client, message: ChatMessage) => {
@@ -57,8 +74,25 @@ export class ThirdPersonRoom extends Room<State> {
 			if (!text) {
 				return;
 			}
+			const sender = this.state.players.get(client.sessionId);
+			if (!sender) {
+				return;
+			}
 			const ckey = this.ckeys.get(client.sessionId) ?? '';
-			this.broadcast('chat', { sessionId: client.sessionId, ckey, text });
+			const msg = { sessionId: client.sessionId, ckey, text };
+			const distSq = HEAR_DISTANCE * HEAR_DISTANCE;
+			for (const target of this.clients) {
+				const tp = this.state.players.get(target.sessionId);
+				if (!tp) {
+					continue;
+				}
+				const dx = tp.x - sender.x;
+				const dy = tp.y - sender.y;
+				const dz = tp.z - sender.z;
+				if (dx * dx + dy * dy + dz * dz <= distSq) {
+					target.send('chat', msg);
+				}
+			}
 			if (ckey) {
 				enqueueChat(ckey, text);
 			}
@@ -80,6 +114,10 @@ export class ThirdPersonRoom extends Room<State> {
 	}
 
 	onLeave(client: Client) {
+		const ckey = this.ckeys.get(client.sessionId);
+		if (ckey) {
+			removePosition(ckey);
+		}
 		this.state.players.delete(client.sessionId);
 		this.ckeys.delete(client.sessionId);
 	}

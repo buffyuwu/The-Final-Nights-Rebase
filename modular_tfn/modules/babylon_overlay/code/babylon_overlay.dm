@@ -1,22 +1,31 @@
 #define BABYLON_SERVER_PORT 2567
 #define BABYLON_INTERNAL_PORT 2568
 
+/mob/var/babylon_x = null
+/mob/var/babylon_y = null
+/mob/var/babylon_z = null
+
 /client/var/babylon_overlay_active = FALSE
 
-/client/proc/get_babylon_server_url()
-	var/host = CONFIG_GET(string/public_address)
+/proc/get_babylon_server_url()
+	var/host = CONFIG_GET(string/babylon_server_host)
 	if(!host)
-		host = CONFIG_GET(string/server)
-	if(!host)
-		host = world.internet_address
-	if(!host)
-		host = world.address
-	if(!host)
-		host = "localhost"
-	var/colon_index = findtext(host, ":")
-	if(colon_index)
-		host = copytext(host, 1, colon_index)
+		host = CONFIG_GET(string/public_address)
+		if(!host)
+			host = CONFIG_GET(string/server)
+		if(!host)
+			host = world.internet_address
+		if(!host)
+			host = world.address
+		if(!host)
+			host = "localhost"
+		var/colon_index = findtext(host, ":")
+		if(colon_index)
+			host = copytext(host, 1, colon_index)
 	return "ws://[host]:[BABYLON_SERVER_PORT]"
+
+/proc/get_babylon_internal_url()
+	return "http://127.0.0.1:[BABYLON_INTERNAL_PORT]"
 
 /client/proc/get_babylon_shell_html()
 	var/dat = {"<!DOCTYPE html>
@@ -79,7 +88,7 @@ SUBSYSTEM_DEF(babylon_chat)
 	ss_flags = SS_NO_INIT
 
 /datum/controller/subsystem/babylon_chat/fire()
-	var/list/response = world.Export("http://127.0.0.1:[BABYLON_INTERNAL_PORT]/pending-chat")
+	var/list/response = world.Export("[get_babylon_internal_url()]/pending-chat")
 	if(!response)
 		return
 	var/list/entries = json_decode(file2text(response["CONTENT"]))
@@ -94,6 +103,46 @@ SUBSYSTEM_DEF(babylon_chat)
 		if(!target?.mob)
 			continue
 		target.mob.say(entry_message)
+
+SUBSYSTEM_DEF(babylon_positions)
+	name = "Babylon Positions"
+	wait = 0.5 SECONDS
+	ss_flags = SS_NO_INIT
+
+/datum/controller/subsystem/babylon_positions/fire()
+	var/list/response = world.Export("[get_babylon_internal_url()]/player-positions")
+	if(!response)
+		return
+	var/list/entries = json_decode(file2text(response["CONTENT"]))
+	if(!islist(entries))
+		return
+	for(var/list/entry in entries)
+		var/entry_ckey = entry["ckey"]
+		if(!entry_ckey)
+			continue
+		var/client/C = GLOB.directory[entry_ckey]
+		if(!C?.mob)
+			continue
+		C.mob.babylon_x = entry["x"]
+		C.mob.babylon_y = entry["y"]
+		C.mob.babylon_z = entry["z"]
+
+SUBSYSTEM_DEF(babylon_debug)
+	name = "Babylon Debug"
+	wait = 0.5 SECONDS
+	ss_flags = SS_NO_INIT
+
+/datum/controller/subsystem/babylon_debug/fire()
+	var/list/response = world.Export("[get_babylon_internal_url()]/pending-debug")
+	if(!response)
+		return
+	var/list/entries = json_decode(file2text(response["CONTENT"]))
+	if(!islist(entries))
+		return
+	for(var/entry_message in entries)
+		if(!entry_message)
+			continue
+		to_chat(world, "[entry_message]")
 
 #undef BABYLON_SERVER_PORT
 #undef BABYLON_INTERNAL_PORT

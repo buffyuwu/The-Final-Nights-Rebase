@@ -1,6 +1,7 @@
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { Server } from 'colyseus';
-import { drainChat } from './chatQueue';
+import { drainChat, drainDebug } from './chatQueue';
+import { getPositions } from './positionStore';
 import { ThirdPersonRoom } from './rooms/ThirdPersonRoom';
 
 const PORT = Number(process.env.PORT ?? 2567);
@@ -23,6 +24,12 @@ Bun.serve({
 		const url = new URL(req.url);
 		if (url.pathname === '/pending-chat') {
 			return Response.json(drainChat());
+		}
+		if (url.pathname === '/pending-debug') {
+			return Response.json(drainDebug());
+		}
+		if (url.pathname === '/player-positions') {
+			return Response.json(getPositions());
 		}
 		return new Response('Not found', { status: 404 });
 	},

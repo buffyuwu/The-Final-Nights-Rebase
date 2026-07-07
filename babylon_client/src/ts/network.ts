@@ -61,4 +61,11 @@ export class NetworkClient {
 		}
 		this.room.send('chat', { text });
 	}
+
+	sendDebug(text: string): void {
+		if (!this.room || !text) {
+			return;
+		}
+		this.room.send('debug', { text });
+	}
 }
